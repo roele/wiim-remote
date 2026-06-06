@@ -61,76 +61,82 @@ export class WiiMAPI {
 
   // --- Playback ---
   async togglePlayPause(): Promise<void> {
-    await this.command("toggle");
+    await this.command("setPlayerCmd:onepause");
   }
   async next(): Promise<void> {
-    await this.command("next");
+    await this.command("setPlayerCmd:next");
   }
   async previous(): Promise<void> {
-    await this.command("previous");
+    await this.command("setPlayerCmd:prev");
   }
 
   // --- Volume ---
   async getVolume(): Promise<number> {
-    const raw = await this.request("getvolume");
-    const n = parseInt(raw, 10);
-    if (isNaN(n)) throw new WiiMAPIError("INVALID_RESPONSE", `Expected number, got: ${raw}`);
-    return n;
+    // Volume is embedded in getPlayerStatus response as the "vol" field
+    const raw = await this.request("getPlayerStatus");
+    try {
+      const json = JSON.parse(raw);
+      const n = parseInt(json.vol, 10);
+      if (isNaN(n)) throw new Error("vol field missing or non-numeric");
+      return n;
+    } catch {
+      throw new WiiMAPIError("INVALID_RESPONSE", `Cannot parse volume from: ${raw}`);
+    }
   }
 
   async setVolume(volume: number): Promise<void> {
     const clamped = Math.max(0, Math.min(100, volume));
-    await this.command(`setvolume:${clamped}`);
+    await this.command(`setPlayerCmd:vol:${clamped}`);
   }
 
   async volumeUp(step: number): Promise<void> {
-    const current = await this.getVolume();
-    await this.setVolume(current + step);
+    const clamped = Math.max(1, step);
+    await this.command(`setPlayerCmd:vol:+${clamped}`);
   }
 
   async volumeDown(step: number): Promise<void> {
-    const current = await this.getVolume();
-    await this.setVolume(current - step);
+    const clamped = Math.max(1, step);
+    await this.command(`setPlayerCmd:vol:-${clamped}`);
   }
 
-  // --- Preset ---
+  // --- Preset (1-based: MCUKeyShortClick:1 = first preset) ---
   async selectPreset(index: number): Promise<void> {
     const clamped = Math.max(0, Math.min(11, index));
-    await this.command(`play_preset:${clamped}`);
+    await this.command(`MCUKeyShortClick:${clamped + 1}`);
   }
 
   // --- Input ---
   async switchInput(input: InputSource): Promise<void> {
     const map: Record<InputSource, string> = {
-      "line-in": "linein",
+      "line-in": "line-in",
       bluetooth: "bluetooth",
       optical: "optical",
       usb: "usb",
       wifi: "wifi",
     };
-    await this.command(`setinput:${map[input]}`);
+    await this.command(`setPlayerCmd:switchmode:${map[input]}`);
   }
 
   // --- EQ ---
   async setEQPreset(index: EQPresetIndex): Promise<void> {
     const clamped = Math.max(0, Math.min(21, index));
-    await this.command(`seteq:${clamped}`);
+    await this.command(`setPlayerCmd:equalizer:${clamped}`);
   }
 
   async toggleEQ(enabled: boolean): Promise<void> {
-    await this.command(`eq:${enabled ? "on" : "off"}`);
+    await this.command(`setPlayerCmd:eq:${enabled ? "on" : "off"}`);
   }
 
   // --- Device info ---
   async getSystemInfo(): Promise<SystemInfo> {
-    const raw = await this.request("getSystemInfo");
+    const raw = await this.request("getStatusEx");
     try {
       const json = JSON.parse(raw);
       return {
-        model: json.model ?? "Unknown",
-        firmwareVersion: json.fwVersion ?? json.fw_version ?? "Unknown",
-        macAddress: json.mac ?? "Unknown",
-        serialNumber: json.sn ?? json.serial ?? "Unknown",
+        model: json.project ?? json.DeviceName ?? "WiiM Device",
+        firmwareVersion: json.firmware ?? json.FW_Release_version ?? "Unknown",
+        macAddress: json.MAC ?? "Unknown",
+        serialNumber: json.uuid ?? "Unknown",
       };
     } catch {
       throw new WiiMAPIError("INVALID_RESPONSE", `Cannot parse system info: ${raw}`);
