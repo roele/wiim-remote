@@ -1,14 +1,20 @@
-// WiiM Device and network discovery
+/**
+ * WiiM Device information and connection details
+ * Used to specify which device to communicate with and store device metadata
+ */
 export interface WiiMDevice {
   ip: string;
   port: number;
   name?: string;
   model?: string;
   firmwareVersion?: string;
-  mac?: string;
+  macAddress?: string;
 }
 
-// Device status from /httpapi.asp?command=getPlayerStatus
+/**
+ * Current playback status from the WiiM device
+ * Retrieved via /httpapi.asp?command=getPlayerStatus
+ */
 export interface DeviceStatus {
   playStatus: 'play' | 'pause' | 'stop' | 'buffering';
   currentTrack: number;
@@ -21,7 +27,10 @@ export interface DeviceStatus {
   albumArt: string;
 }
 
-// Device information from /httpapi.asp?command=getSystemInfo
+/**
+ * System information about the WiiM device
+ * Retrieved via /httpapi.asp?command=getSystemInfo
+ */
 export interface SystemInfo {
   model: string;
   firmwareVersion: string;
@@ -29,25 +38,27 @@ export interface SystemInfo {
   serialNumber: string;
 }
 
-// Volume control response
+/**
+ * Volume control state for the device
+ */
 export interface VolumeResponse {
   volume: number;
   muted: boolean;
 }
 
-// Playback modes
+/** Supported playback modes */
 export type PlaybackMode = 'play' | 'pause' | 'stop';
 
-// Input sources
+/** Supported audio input sources */
 export type InputSource = 'line-in' | 'bluetooth' | 'optical' | 'usb' | 'wifi';
 
-// EQ preset indices (0-21 for 22 available presets)
-export type EQPresetIndex = number; // 0-21
+/** EQ preset index (0-21 representing 22 available presets) */
+export type EQPresetIndex = number;
 
-// Response types for various API calls
-export type ApiResponse = string | Record<string, any>;
+/** Generic API response types */
+export type ApiResponse = string | Record<string, string | number | boolean>;
 
-// Error response types
+/** Error response from WiiM API */
 export interface ApiErrorResponse {
   errorCode: number;
   errorMessage: string;
