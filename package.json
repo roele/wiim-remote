@@ -49,6 +49,47 @@
       "title": "Volume Down",
       "description": "Decreases the volume",
       "mode": "no-view"
+    },
+    {
+      "name": "select-preset",
+      "title": "Select Preset",
+      "description": "Play a WiiM preset station (1–12)",
+      "mode": "view"
+    },
+    {
+      "name": "switch-input",
+      "title": "Switch Input",
+      "description": "Switch the audio input source",
+      "mode": "view"
+    },
+    {
+      "name": "toggle-eq",
+      "title": "Toggle EQ",
+      "description": "Enable or disable the equalizer",
+      "mode": "no-view"
+    },
+    {
+      "name": "set-eq-preset",
+      "title": "Set EQ Preset",
+      "description": "Select an equalizer preset",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "wiim_device_ip",
+      "type": "textfield",
+      "required": false,
+      "title": "WiiM Device IP Address",
+      "description": "IP address of your WiiM device (e.g. 192.168.1.100). Leave blank to use auto-discovery."
+    },
+    {
+      "name": "wiim_volume_step",
+      "type": "textfield",
+      "required": false,
+      "title": "Volume Step",
+      "description": "How much to adjust volume per step (1–50). Default is 5.",
+      "default": "5"
     }
   ],
   "dependencies": {
