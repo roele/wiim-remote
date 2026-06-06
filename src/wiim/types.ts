@@ -16,7 +16,7 @@ export interface WiiMDevice {
  * Retrieved via /httpapi.asp?command=getPlayerStatus
  */
 export interface DeviceStatus {
-  playStatus: 'play' | 'pause' | 'stop' | 'buffering';
+  playStatus: "play" | "pause" | "stop" | "buffering";
   currentTrack: number;
   totalTracks: number;
   currentTime: number;
@@ -47,10 +47,10 @@ export interface VolumeResponse {
 }
 
 /** Supported playback modes */
-export type PlaybackMode = 'play' | 'pause' | 'stop';
+export type PlaybackMode = "play" | "pause" | "stop";
 
 /** Supported audio input sources */
-export type InputSource = 'line-in' | 'bluetooth' | 'optical' | 'usb' | 'wifi';
+export type InputSource = "line-in" | "bluetooth" | "optical" | "usb" | "wifi";
 
 /** EQ preset index (0-21 representing 22 available presets) */
 export type EQPresetIndex = number;

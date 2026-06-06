@@ -5,10 +5,28 @@ import { WiiMAPIError } from "./wiim/errors";
 import { resolveDevice } from "./wiim/discovery";
 
 const EQ_PRESETS = [
-  "Flat", "Acoustic", "Bass Booster", "Bass Reducer", "Classical",
-  "Dance", "Deep", "Electronic", "Hip-Hop", "Jazz", "Latin",
-  "Loudness", "Lounge", "Piano", "Pop", "R&B", "Rock",
-  "Small Speakers", "Spoken Word", "Treble Booster", "Treble Reducer", "Vocal Booster",
+  "Flat",
+  "Acoustic",
+  "Bass Booster",
+  "Bass Reducer",
+  "Classical",
+  "Dance",
+  "Deep",
+  "Electronic",
+  "Hip-Hop",
+  "Jazz",
+  "Latin",
+  "Loudness",
+  "Lounge",
+  "Piano",
+  "Pop",
+  "R&B",
+  "Rock",
+  "Small Speakers",
+  "Spoken Word",
+  "Treble Booster",
+  "Treble Reducer",
+  "Vocal Booster",
 ];
 
 export default function Command() {

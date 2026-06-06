@@ -15,7 +15,11 @@ export default function Command() {
   async function handleSubmit(values: Values) {
     const volume = parseInt(values.volume, 10);
     if (isNaN(volume) || volume < 0 || volume > 100) {
-      await showToast({ style: Toast.Style.Failure, title: "Invalid volume", message: "Enter a number between 0 and 100" });
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Invalid volume",
+        message: "Enter a number between 0 and 100",
+      });
       return;
     }
     setIsLoading(true);

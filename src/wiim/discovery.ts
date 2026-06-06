@@ -21,14 +21,16 @@ export function broadcastDiscover(): Promise<WiiMDevice> {
     function settle(fn: () => void) {
       if (settled) return;
       settled = true;
-      try { socket.close(); } catch { /* ignore */ }
+      try {
+        socket.close();
+      } catch {
+        /* ignore */
+      }
       fn();
     }
 
     const timer = setTimeout(() => {
-      settle(() =>
-        reject(new WiiMAPIError("DISCOVERY_FAILED", "No WiiM device responded within 5 seconds"))
-      );
+      settle(() => reject(new WiiMAPIError("DISCOVERY_FAILED", "No WiiM device responded within 5 seconds")));
     }, DISCOVERY_TIMEOUT_MS);
 
     socket.on("message", (msg, rinfo) => {
@@ -42,15 +44,13 @@ export function broadcastDiscover(): Promise<WiiMDevice> {
           model: parts[0] || "WiiM Device",
           firmwareVersion: parts[1],
           macAddress: parts[2],
-        })
+        }),
       );
     });
 
     socket.on("error", (err) => {
       clearTimeout(timer);
-      settle(() =>
-        reject(new WiiMAPIError("DISCOVERY_FAILED", `Socket error: ${err.message}`, undefined, err))
-      );
+      settle(() => reject(new WiiMAPIError("DISCOVERY_FAILED", `Socket error: ${err.message}`, undefined, err)));
     });
 
     socket.bind(() => {
@@ -59,9 +59,7 @@ export function broadcastDiscover(): Promise<WiiMDevice> {
       socket.send(packet, 0, packet.length, DISCOVERY_PORT, BROADCAST_ADDRESS, (err) => {
         if (err) {
           clearTimeout(timer);
-          settle(() =>
-            reject(new WiiMAPIError("DISCOVERY_FAILED", `Send error: ${err.message}`, undefined, err))
-          );
+          settle(() => reject(new WiiMAPIError("DISCOVERY_FAILED", `Send error: ${err.message}`, undefined, err)));
         }
       });
     });

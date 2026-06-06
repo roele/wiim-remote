@@ -198,7 +198,12 @@ test("switchInput maps wifi to wifi", async () => {
 
 test("getSystemInfo parses standard JSON fields", async () => {
   const api = makeApi({
-    getSystemInfo: JSON.stringify({ model: "WiiM Pro", fwVersion: "4.6.415080", mac: "AA:BB:CC:DD:EE:FF", sn: "SN123" }),
+    getSystemInfo: JSON.stringify({
+      model: "WiiM Pro",
+      fwVersion: "4.6.415080",
+      mac: "AA:BB:CC:DD:EE:FF",
+      sn: "SN123",
+    }),
   });
   const info = await api.getSystemInfo();
   assert.strictEqual(info.model, "WiiM Pro");
@@ -209,7 +214,12 @@ test("getSystemInfo parses standard JSON fields", async () => {
 
 test("getSystemInfo falls back to fw_version and serial fields", async () => {
   const api = makeApi({
-    getSystemInfo: JSON.stringify({ model: "WiiM Mini", fw_version: "3.0.0", mac: "11:22:33:44:55:66", serial: "SN456" }),
+    getSystemInfo: JSON.stringify({
+      model: "WiiM Mini",
+      fw_version: "3.0.0",
+      mac: "11:22:33:44:55:66",
+      serial: "SN456",
+    }),
   });
   const info = await api.getSystemInfo();
   assert.strictEqual(info.firmwareVersion, "3.0.0");
