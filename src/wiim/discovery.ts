@@ -2,7 +2,13 @@ import { createSocket } from "node:dgram";
 import { networkInterfaces } from "node:os";
 import { WiiMDevice } from "./types";
 import { WiiMAPIError } from "./errors";
-import { getManualDeviceIP, getCachedDeviceIP, setCachedDeviceIP, isCacheValid } from "./preferences";
+import {
+  getManualDeviceIP,
+  getCachedDeviceIP,
+  setCachedDeviceIP,
+  isCacheValid,
+  getSelectedDeviceIP,
+} from "./preferences";
 
 const SSDP_MULTICAST = "239.255.255.250";
 const SSDP_PORT = 1900;
@@ -26,12 +32,77 @@ const SSDP_MSEARCH = [
  * queried with ssdp:all.
  */
 function extractWiiMIP(response: string): string | null {
-  const locationMatch = response.match(/LOCATION:\s*http:\/\/(\d+\.\d+\.\d+\.\d+)[:\/]/i);
+  const locationMatch = response.match(/LOCATION:\s*http:\/\/(\d+\.\d+\.\d+\.\d+)[:/]/i);
   if (!locationMatch) return null;
   if (/schemas-wiimu-com/i.test(response)) {
     return locationMatch[1];
   }
   return null;
+}
+
+/**
+ * Sends an SSDP M-SEARCH and collects all WiiM devices found within the timeout.
+ * Returns an array of unique devices by IP address.
+ */
+export function broadcastDiscoverAll(): Promise<WiiMDevice[]> {
+  return new Promise((resolve, reject) => {
+    const socket = createSocket("udp4");
+    const foundIPs = new Set<string>();
+    let settled = false;
+
+    function settle(fn: () => void) {
+      if (settled) return;
+      settled = true;
+      try {
+        socket.close();
+      } catch {
+        /* ignore */
+      }
+      fn();
+    }
+
+    const timer = setTimeout(() => {
+      settle(() => {
+        const devices = Array.from(foundIPs).map((ip) => ({ ip, port: 443 }));
+        if (devices.length === 0) {
+          reject(
+            new WiiMAPIError(
+              "DISCOVERY_FAILED",
+              "No WiiM device found on network. Try setting the IP address manually in extension preferences.",
+            ),
+          );
+        } else {
+          resolve(devices);
+        }
+      });
+    }, DISCOVERY_TIMEOUT_MS);
+
+    socket.on("message", (msg) => {
+      const response = msg.toString("utf-8");
+      const ip = extractWiiMIP(response);
+      if (ip) {
+        foundIPs.add(ip);
+      }
+    });
+
+    socket.on("error", (err) => {
+      clearTimeout(timer);
+      settle(() => reject(new WiiMAPIError("DISCOVERY_FAILED", `Socket error: ${err.message}`, undefined, err)));
+    });
+
+    const localIP = getLocalIP();
+
+    socket.bind(0, localIP ?? undefined, () => {
+      socket.setBroadcast(true);
+      const packet = Buffer.from(SSDP_MSEARCH);
+      socket.send(packet, 0, packet.length, SSDP_PORT, SSDP_MULTICAST, (err) => {
+        if (err) {
+          clearTimeout(timer);
+          settle(() => reject(new WiiMAPIError("DISCOVERY_FAILED", `Send error: ${err.message}`, undefined, err)));
+        }
+      });
+    });
+  });
 }
 
 /**
@@ -46,7 +117,11 @@ export function broadcastDiscover(): Promise<WiiMDevice> {
     function settle(fn: () => void) {
       if (settled) return;
       settled = true;
-      try { socket.close(); } catch { /* ignore */ }
+      try {
+        socket.close();
+      } catch {
+        /* ignore */
+      }
       fn();
     }
 
@@ -93,13 +168,19 @@ export function broadcastDiscover(): Promise<WiiMDevice> {
 /**
  * Resolves the WiiM device using priority order:
  * 1. Manual IP from Raycast preferences (if set)
- * 2. Cached auto-discovered IP (if still valid, within 30 minutes)
- * 3. Fresh SSDP discovery (result is cached for future calls)
+ * 2. User-selected device from auto-discovery (if set)
+ * 3. Cached auto-discovered IP (if still valid, within 30 minutes)
+ * 4. Fresh SSDP discovery (result is cached for future calls)
  */
 export async function resolveDevice(): Promise<WiiMDevice> {
   const manualIP = getManualDeviceIP();
   if (manualIP) {
     return { ip: manualIP, port: 443 };
+  }
+
+  const selectedIP = await getSelectedDeviceIP();
+  if (selectedIP) {
+    return { ip: selectedIP, port: 443 };
   }
 
   if (await isCacheValid()) {

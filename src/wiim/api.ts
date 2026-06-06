@@ -171,7 +171,7 @@ export class WiiMAPI {
     try {
       const json = JSON.parse(raw);
       return {
-        model: json.project ?? json.DeviceName ?? "WiiM Device",
+        model: json.ssid ?? json.project ?? json.DeviceName ?? "WiiM Device",
         firmwareVersion: json.firmware ?? json.FW_Release_version ?? "Unknown",
         macAddress: json.MAC ?? "Unknown",
         serialNumber: json.uuid ?? "Unknown",

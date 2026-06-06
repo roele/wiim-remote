@@ -8,6 +8,7 @@ interface WiiMPreferences {
 const STORAGE_KEYS = {
   CACHED_IP: "wiim_cached_device_ip",
   CACHE_TIME: "wiim_discovery_cache_time",
+  SELECTED_IP: "wiim_selected_device_ip",
 };
 
 const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
@@ -63,4 +64,26 @@ export async function isCacheValid(): Promise<boolean> {
   if (!raw) return false;
   const cachedAt = parseInt(raw, 10);
   return !isNaN(cachedAt) && Date.now() - cachedAt < CACHE_TTL;
+}
+
+/**
+ * Get selected device IP from LocalStorage (user-selected via select-device command).
+ */
+export async function getSelectedDeviceIP(): Promise<string | undefined> {
+  const value = await LocalStorage.getItem<string>(STORAGE_KEYS.SELECTED_IP);
+  return value ?? undefined;
+}
+
+/**
+ * Store user-selected device IP in LocalStorage.
+ */
+export async function setSelectedDeviceIP(ip: string): Promise<void> {
+  await LocalStorage.setItem(STORAGE_KEYS.SELECTED_IP, ip);
+}
+
+/**
+ * Clear the selected device.
+ */
+export async function clearSelectedDeviceIP(): Promise<void> {
+  await LocalStorage.removeItem(STORAGE_KEYS.SELECTED_IP);
 }

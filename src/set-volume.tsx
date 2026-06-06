@@ -18,14 +18,20 @@ export default function Command() {
     resolveDevice()
       .then((device) => new WiiMAPI(device).getVolume())
       .then((vol) => setCurrentVolume(String(vol)))
-      .catch(() => { /* keep default */ })
+      .catch(() => {
+        /* keep default */
+      })
       .finally(() => setIsLoading(false));
   }, []);
 
   async function handleSubmit(values: Values) {
     const volume = parseInt(values.volume, 10);
     if (isNaN(volume) || volume < 0 || volume > 100) {
-      await showToast({ style: Toast.Style.Failure, title: "Invalid volume", message: "Enter a number between 0 and 100" });
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Invalid volume",
+        message: "Enter a number between 0 and 100",
+      });
       return;
     }
     setIsLoading(true);
@@ -55,12 +61,7 @@ export default function Command() {
         </ActionPanel>
       }
     >
-      <Form.TextField
-        id="volume"
-        title="Volume (0–100)"
-        value={currentVolume}
-        onChange={setCurrentVolume}
-      />
+      <Form.TextField id="volume" title="Volume (0–100)" value={currentVolume} onChange={setCurrentVolume} />
     </Form>
   );
 }

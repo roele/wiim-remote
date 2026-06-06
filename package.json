@@ -41,7 +41,7 @@
     },
     {
       "name": "volume-up",
-      "title": "Volume Up",
+      "title": "Volume up",
       "description": "Increases the volume",
       "mode": "no-view"
     },
@@ -73,6 +73,12 @@
       "name": "set-eq-preset",
       "title": "Set EQ Preset",
       "description": "Select an equalizer preset",
+      "mode": "view"
+    },
+    {
+      "name": "select-device",
+      "title": "Select Device",
+      "description": "Choose a WiiM device from the network",
       "mode": "view"
     }
   ],
