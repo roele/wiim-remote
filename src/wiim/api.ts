@@ -90,13 +90,13 @@ export class WiiMAPI {
   }
 
   async volumeUp(step: number): Promise<void> {
-    const clamped = Math.max(1, step);
-    await this.command(`setPlayerCmd:vol:+${clamped}`);
+    const current = await this.getVolume();
+    await this.setVolume(current + Math.max(1, step));
   }
 
   async volumeDown(step: number): Promise<void> {
-    const clamped = Math.max(1, step);
-    await this.command(`setPlayerCmd:vol:-${clamped}`);
+    const current = await this.getVolume();
+    await this.setVolume(current - Math.max(1, step));
   }
 
   // --- Preset (1-based: MCUKeyShortClick:1 = first preset) ---

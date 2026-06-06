@@ -26,9 +26,6 @@ function eqToggleCmd(on: boolean) { return `setPlayerCmd:eq:${on ? 'on' : 'off'}
 test('setVolume clamps 0', () => assert.strictEqual(volumeCmd(-5), 'setPlayerCmd:vol:0'));
 test('setVolume clamps 100', () => assert.strictEqual(volumeCmd(150), 'setPlayerCmd:vol:100'));
 test('setVolume mid value', () => assert.strictEqual(volumeCmd(35), 'setPlayerCmd:vol:35'));
-test('volumeUp uses + prefix', () => assert.strictEqual(volumeUpCmd(5), 'setPlayerCmd:vol:+5'));
-test('volumeDown uses - prefix', () => assert.strictEqual(volumeDownCmd(5), 'setPlayerCmd:vol:-5'));
-test('volumeUp clamps step to min 1', () => assert.strictEqual(volumeUpCmd(0), 'setPlayerCmd:vol:+1'));
 
 // Presets (1-based MCUKeyShortClick)
 test('preset 0 → MCUKeyShortClick:1', () => assert.strictEqual(presetCmd(0), 'MCUKeyShortClick:1'));
@@ -85,3 +82,17 @@ test('getStatusEx falls back for missing fields', () => {
   assert.strictEqual(result.model, 'WiiM Device');
   assert.strictEqual(result.firmwareVersion, 'Unknown');
 });
+
+// Volume up/down use read-then-set (absolute value)
+function volumeUpResult(current: number, step: number): number {
+  return Math.max(0, Math.min(100, current + Math.max(1, step)));
+}
+function volumeDownResult(current: number, step: number): number {
+  return Math.max(0, Math.min(100, current - Math.max(1, step)));
+}
+
+test('volumeUp adds step to current', () => assert.strictEqual(volumeUpResult(30, 5), 35));
+test('volumeUp clamps at 100', () => assert.strictEqual(volumeUpResult(98, 5), 100));
+test('volumeDown subtracts step', () => assert.strictEqual(volumeDownResult(30, 5), 25));
+test('volumeDown clamps at 0', () => assert.strictEqual(volumeDownResult(3, 5), 0));
+test('volumeUp enforces min step of 1', () => assert.strictEqual(volumeUpResult(30, 0), 31));
