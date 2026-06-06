@@ -1,5 +1,5 @@
 import * as https from "https";
-import type { WiiMDevice, DeviceStatus, SystemInfo, InputSource, EQPresetIndex } from "./types";
+import type { WiiMDevice, DeviceStatus, SystemInfo, InputSource } from "./types";
 import { WiiMAPIError } from "./errors";
 
 const API_TIMEOUT_MS = 5000;
@@ -127,12 +127,42 @@ export class WiiMAPI {
     }
   }
 
-  async setEQPreset(index: EQPresetIndex): Promise<void> {
-    await this.command(`setPlayerCmd:equalizer:${Math.max(0, index)}`);
+  async getEQPresetIndex(): Promise<number> {
+    // eq field in getPlayerStatus is the active preset index (0 = Flat/off)
+    const raw = await this.request("getPlayerStatus");
+    try {
+      return parseInt(JSON.parse(raw).eq ?? "0", 10);
+    } catch {
+      return 0;
+    }
   }
 
-  async toggleEQ(enabled: boolean): Promise<void> {
-    await this.command(`setPlayerCmd:eq:${enabled ? "on" : "off"}`);
+  async setEQPreset(name: string): Promise<void> {
+    // EQLoad accepts the preset name and returns JSON {status:"OK"}
+    const raw = await this.request(`EQLoad:${name}`);
+    try {
+      const json = JSON.parse(raw);
+      if (json.status !== "OK") {
+        throw new WiiMAPIError("COMMAND_FAILED", `EQLoad:${name} failed: ${raw}`);
+      }
+    } catch (e) {
+      if (e instanceof WiiMAPIError) throw e;
+      throw new WiiMAPIError("INVALID_RESPONSE", `Unexpected EQLoad response: ${raw}`);
+    }
+  }
+
+  async setEQEnabled(enabled: boolean): Promise<void> {
+    // EQOn/EQOff return JSON {status:"OK"} not plain "OK"
+    const raw = await this.request(enabled ? "EQOn" : "EQOff");
+    try {
+      const json = JSON.parse(raw);
+      if (json.status !== "OK") {
+        throw new WiiMAPIError("COMMAND_FAILED", `EQ toggle failed: ${raw}`);
+      }
+    } catch (e) {
+      if (e instanceof WiiMAPIError) throw e;
+      throw new WiiMAPIError("INVALID_RESPONSE", `Unexpected EQ toggle response: ${raw}`);
+    }
   }
 
   // --- Device info ---

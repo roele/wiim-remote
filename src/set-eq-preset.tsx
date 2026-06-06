@@ -21,10 +21,10 @@ export default function Command() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  async function handleSelect(index: number, name: string) {
+  async function handleSelect(name: string) {
     try {
       const device = await resolveDevice();
-      await new WiiMAPI(device).setEQPreset(index);
+      await new WiiMAPI(device).setEQPreset(name);
       await showToast({ style: Toast.Style.Success, title: `EQ: ${name}` });
       pop();
     } catch (error) {
@@ -44,10 +44,9 @@ export default function Command() {
           key={index}
           icon={Icon.Waveform}
           title={name}
-          subtitle={`Preset ${index}`}
           actions={
             <ActionPanel>
-              <Action title="Apply EQ Preset" onAction={() => handleSelect(index, name)} />
+              <Action title="Apply EQ Preset" onAction={() => handleSelect(name)} />
             </ActionPanel>
           }
         />

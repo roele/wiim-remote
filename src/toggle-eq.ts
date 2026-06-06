@@ -4,19 +4,20 @@ import { WiiMAPI } from "./wiim/api";
 import { WiiMAPIError } from "./wiim/errors";
 import { resolveDevice } from "./wiim/discovery";
 
-const EQ_STATE_KEY = "wiim_eq_enabled";
+const EQ_ENABLED_KEY = "wiim_eq_enabled";
 
 export default async function main() {
   try {
-    const stored = await LocalStorage.getItem<string>(EQ_STATE_KEY);
+    const device = await resolveDevice();
+    const api = new WiiMAPI(device);
+
+    const stored = await LocalStorage.getItem<string>(EQ_ENABLED_KEY);
     const wasEnabled = stored === "true";
     const newState = !wasEnabled;
 
-    const device = await resolveDevice();
-    const api = new WiiMAPI(device);
-    await api.toggleEQ(newState);
-    await LocalStorage.setItem(EQ_STATE_KEY, String(newState));
-    await showToast({ style: Toast.Style.Success, title: `EQ ${newState ? "Enabled" : "Disabled"}` });
+    await api.setEQEnabled(newState);
+    await LocalStorage.setItem(EQ_ENABLED_KEY, String(newState));
+    await showToast({ style: Toast.Style.Success, title: `EQ ${newState ? "On" : "Off"}` });
   } catch (error) {
     if (error instanceof WiiMAPIError) {
       const hint = error.getHint();
