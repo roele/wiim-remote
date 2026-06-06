@@ -1,5 +1,5 @@
-import { createSocket } from "dgram";
-import { networkInterfaces } from "os";
+import { createSocket } from "node:dgram";
+import { networkInterfaces } from "node:os";
 import { WiiMDevice } from "./types";
 import { WiiMAPIError } from "./errors";
 import { getManualDeviceIP, getCachedDeviceIP, setCachedDeviceIP, isCacheValid } from "./preferences";

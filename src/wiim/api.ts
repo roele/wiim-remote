@@ -1,13 +1,13 @@
-import * as https from "https";
+import * as https from "node:https";
 import type { WiiMDevice, DeviceStatus, SystemInfo, InputSource } from "./types";
 import { WiiMAPIError } from "./errors";
 
 const API_TIMEOUT_MS = 5000;
 
 export class WiiMAPI {
-  private agent: https.Agent;
+  private readonly agent: https.Agent;
 
-  constructor(private device: WiiMDevice) {
+  constructor(private readonly device: WiiMDevice) {
     this.agent = new https.Agent({ rejectUnauthorized: false });
   }
 
