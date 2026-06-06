@@ -157,13 +157,23 @@ export class WiiMAPI {
         totalTracks: Number(json.totlen ?? 0),
         currentTime: Number(json.curtime ?? 0),
         totalTime: Number(json.tottime ?? 0),
-        title: json.title ?? "",
-        artist: json.artist ?? "",
-        album: json.album ?? "",
+        title: hexDecode(json.Title ?? json.title ?? ""),
+        artist: hexDecode(json.Artist ?? json.artist ?? ""),
+        album: hexDecode(json.Album ?? json.album ?? ""),
         albumArt: json.pic ?? "",
       };
     } catch {
       throw new WiiMAPIError("INVALID_RESPONSE", `Cannot parse player status: ${raw}`);
     }
+  }
+}
+
+/** WiiM encodes track metadata as hex UTF-8 strings. Decodes them safely. */
+function hexDecode(s: string): string {
+  if (!s || s.length === 0 || s.length % 2 !== 0) return s;
+  try {
+    return Buffer.from(s, "hex").toString("utf8");
+  } catch {
+    return s;
   }
 }
