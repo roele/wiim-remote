@@ -118,9 +118,17 @@ export class WiiMAPI {
   }
 
   // --- EQ ---
+  async getEQPresets(): Promise<string[]> {
+    const raw = await this.request("EQGetList");
+    try {
+      return JSON.parse(raw) as string[];
+    } catch {
+      throw new WiiMAPIError("INVALID_RESPONSE", `Cannot parse EQ preset list: ${raw}`);
+    }
+  }
+
   async setEQPreset(index: EQPresetIndex): Promise<void> {
-    const clamped = Math.max(0, Math.min(21, index));
-    await this.command(`setPlayerCmd:equalizer:${clamped}`);
+    await this.command(`setPlayerCmd:equalizer:${Math.max(0, index)}`);
   }
 
   async toggleEQ(enabled: boolean): Promise<void> {

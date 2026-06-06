@@ -1,41 +1,32 @@
-import { List, ActionPanel, Action, showToast, Toast, Icon } from "@raycast/api";
+import { List, ActionPanel, Action, showToast, Toast, Icon, useNavigation } from "@raycast/api";
 import { showFailureToast } from "@raycast/utils";
+import { useEffect, useState } from "react";
 import { WiiMAPI } from "./wiim/api";
 import { WiiMAPIError } from "./wiim/errors";
 import { resolveDevice } from "./wiim/discovery";
 
-const EQ_PRESETS = [
-  "Flat",
-  "Acoustic",
-  "Bass Booster",
-  "Bass Reducer",
-  "Classical",
-  "Dance",
-  "Deep",
-  "Electronic",
-  "Hip-Hop",
-  "Jazz",
-  "Latin",
-  "Loudness",
-  "Lounge",
-  "Piano",
-  "Pop",
-  "R&B",
-  "Rock",
-  "Small Speakers",
-  "Spoken Word",
-  "Treble Booster",
-  "Treble Reducer",
-  "Vocal Booster",
-];
-
 export default function Command() {
-  async function handleSelect(index: number) {
+  const { pop } = useNavigation();
+  const [isLoading, setIsLoading] = useState(true);
+  const [presets, setPresets] = useState<string[]>([]);
+
+  useEffect(() => {
+    resolveDevice()
+      .then((device) => new WiiMAPI(device).getEQPresets())
+      .then(setPresets)
+      .catch((error) => {
+        const hint = error instanceof WiiMAPIError ? error.getHint() : { title: "Error", message: String(error) };
+        showFailureToast(hint.title, { message: hint.message });
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  async function handleSelect(index: number, name: string) {
     try {
       const device = await resolveDevice();
-      const api = new WiiMAPI(device);
-      await api.setEQPreset(index);
-      await showToast({ style: Toast.Style.Success, title: `EQ: ${EQ_PRESETS[index]}` });
+      await new WiiMAPI(device).setEQPreset(index);
+      await showToast({ style: Toast.Style.Success, title: `EQ: ${name}` });
+      pop();
     } catch (error) {
       if (error instanceof WiiMAPIError) {
         const hint = error.getHint();
@@ -47,8 +38,8 @@ export default function Command() {
   }
 
   return (
-    <List navigationTitle="Set EQ Preset">
-      {EQ_PRESETS.map((name, index) => (
+    <List navigationTitle="Set EQ Preset" isLoading={isLoading}>
+      {presets.map((name, index) => (
         <List.Item
           key={index}
           icon={Icon.Waveform}
@@ -56,7 +47,7 @@ export default function Command() {
           subtitle={`Preset ${index}`}
           actions={
             <ActionPanel>
-              <Action title="Apply EQ Preset" onAction={() => handleSelect(index)} />
+              <Action title="Apply EQ Preset" onAction={() => handleSelect(index, name)} />
             </ActionPanel>
           }
         />
