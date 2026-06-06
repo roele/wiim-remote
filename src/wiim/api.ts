@@ -19,13 +19,7 @@ export class WiiMAPI {
     return new Promise((resolve, reject) => {
       let settled = false;
 
-      const timer = setTimeout(() => {
-        if (settled) return;
-        settled = true;
-        reject(new WiiMAPIError("NETWORK_TIMEOUT", `Device did not respond within ${API_TIMEOUT_MS}ms`));
-      }, API_TIMEOUT_MS);
-
-      https
+      const req = https
         .get(this.url(command), { agent: this.agent }, (res) => {
           let body = "";
           res.on("data", (chunk: string) => {
@@ -48,6 +42,13 @@ export class WiiMAPI {
           clearTimeout(timer);
           reject(new WiiMAPIError("NETWORK_TIMEOUT", `Network error: ${err.message}`, undefined, err));
         });
+
+      const timer = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        req.destroy();
+        reject(new WiiMAPIError("NETWORK_TIMEOUT", `Device did not respond within ${API_TIMEOUT_MS}ms`));
+      }, API_TIMEOUT_MS);
     });
   }
 

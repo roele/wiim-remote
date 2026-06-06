@@ -36,7 +36,7 @@
       "name": "set-volume",
       "title": "Set Volume",
       "description": "Sets the volume to a specific level",
-      "mode": "no-view"
+      "mode": "view"
     },
     {
       "name": "volume-up",
@@ -53,7 +53,7 @@
     {
       "name": "select-preset",
       "title": "Select Preset",
-      "description": "Play a WiiM preset station (1–12)",
+      "description": "Play a WiiM preset station (1\u201312)",
       "mode": "view"
     },
     {
@@ -88,7 +88,7 @@
       "type": "textfield",
       "required": false,
       "title": "Volume Step",
-      "description": "How much to adjust volume per step (1–50). Default is 5.",
+      "description": "How much to adjust volume per step (1\u201350). Default is 5.",
       "default": "5"
     }
   ],
