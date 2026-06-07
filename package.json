@@ -16,6 +16,12 @@
   "license": "MIT",
   "commands": [
     {
+      "name": "current-track",
+      "title": "Current Track",
+      "description": "Shows the currently playing track",
+      "mode": "view"
+    },
+    {
       "name": "play-pause",
       "title": "Play/Pause",
       "description": "Toggles playback",

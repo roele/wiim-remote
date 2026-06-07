@@ -9,6 +9,7 @@ import {
   DeviceMode,
   LoopMode,
   mapConstType,
+  MetaInfo,
 } from "./types";
 import { WiiMAPIError } from "./errors";
 
@@ -117,6 +118,27 @@ export class WiiMAPI {
     const deviceStatus = await this.getPlayerStatus();
     await this.setMute(!deviceStatus.mute);
     return !deviceStatus.mute;
+  }
+
+  // --- Metadata ---
+  async getMetaInfo(): Promise<MetaInfo> {
+    const raw = await this.request("getMetaInfo");
+    try {
+      const json = JSON.parse(raw);
+      return {
+        album: defaultIfUnknown(json.metaData.album),
+        title: defaultIfUnknown(json.metaData.title),
+        subtitle: defaultIfUnknown(json.metaData.subtitle),
+        artist: defaultIfUnknown(json.metaData.artist),
+        albumArtURI: defaultIfUnknown(json.metaData.albumArtURI),
+        sampleRate: Number(defaultIfUnknown(json.metaData.sampleRate, "0")),
+        bitDepth: Number(defaultIfUnknown(json.metaData.bitDepth, "0")),
+        bitRate: Number(defaultIfUnknown(json.metaData.bitRate, "0")),
+        trackId: json.metaData.trackId ?? "",
+      };
+    } catch {
+      throw new WiiMAPIError("INVALID_RESPONSE", `Cannot parse metadata info: ${raw}`);
+    }
   }
 
   // --- Preset (1-based: MCUKeyShortClick:1 = first preset) ---
@@ -242,4 +264,8 @@ export class WiiMAPI {
       throw new WiiMAPIError("INVALID_RESPONSE", `Cannot parse player status: ${raw}`);
     }
   }
+}
+
+function defaultIfUnknown(value: string, fallback = ""): string {
+  return value.toLowerCase() === "unknow" ? fallback : value;
 }

@@ -78,6 +78,22 @@ export function mapConstType<const T extends Record<string, string>>(
 }
 
 /**
+ * Metadata information about the currently playing track on the WiiM device
+ * Retrieved via /httpapi.asp?command=getMetaInfo
+ */
+export interface MetaInfo {
+  album: string;
+  title: string;
+  subtitle: string;
+  artist: string;
+  albumArtURI: string;
+  sampleRate: number;
+  bitDepth: number;
+  bitRate: number;
+  trackId: string;
+}
+
+/**
  * System information about the WiiM device
  * Retrieved via /httpapi.asp?command=getSystemInfo
  */
