@@ -1,5 +1,15 @@
 import * as https from "node:https";
-import type { WiiMDevice, DeviceStatus, SystemInfo, InputSource } from "./types";
+import {
+  type WiiMDevice,
+  type PlayerStatus,
+  type SystemInfo,
+  type InputSource,
+  DeviceType,
+  DeviceChannel,
+  DeviceMode,
+  LoopMode,
+  mapConstType,
+} from "./types";
 import { WiiMAPIError } from "./errors";
 
 const API_TIMEOUT_MS = 5000;
@@ -76,8 +86,8 @@ export class WiiMAPI {
     const raw = await this.request("getPlayerStatus");
     try {
       const json = JSON.parse(raw);
-      const n = parseInt(json.vol, 10);
-      if (isNaN(n)) throw new Error("vol field missing or non-numeric");
+      const n = Number.parseInt(json.vol, 10);
+      if (Number.isNaN(n)) throw new Error("vol field missing or non-numeric");
       return n;
     } catch {
       throw new WiiMAPIError("INVALID_RESPONSE", `Cannot parse volume from: ${raw}`);
@@ -97,6 +107,16 @@ export class WiiMAPI {
   async volumeDown(step: number): Promise<void> {
     const current = await this.getVolume();
     await this.setVolume(current - Math.max(1, step));
+  }
+
+  async setMute(muted: boolean): Promise<void> {
+    await this.command(`setPlayerCmd:mute:${muted ? "1" : "0"}`);
+  }
+
+  async toggleMute(): Promise<boolean> {
+    const deviceStatus = await this.getPlayerStatus();
+    await this.setMute(!deviceStatus.mute);
+    return !deviceStatus.mute;
   }
 
   // --- Preset (1-based: MCUKeyShortClick:1 = first preset) ---
@@ -124,16 +144,6 @@ export class WiiMAPI {
       return JSON.parse(raw) as string[];
     } catch {
       throw new WiiMAPIError("INVALID_RESPONSE", `Cannot parse EQ preset list: ${raw}`);
-    }
-  }
-
-  async getEQPresetIndex(): Promise<number> {
-    // eq field in getPlayerStatus is the active preset index (0 = Flat/off)
-    const raw = await this.request("getPlayerStatus");
-    try {
-      return parseInt(JSON.parse(raw).eq ?? "0", 10);
-    } catch {
-      return 0;
     }
   }
 
@@ -165,53 +175,71 @@ export class WiiMAPI {
     }
   }
 
+  // FIXME: this currently failes with {status: "failed"} despite being documented
+  /*
+  async getEQStatus(): Promise<boolean> {
+    const raw = await this.request("EQGetStat");
+    try {
+      const json = JSON.parse(raw);
+      console.log("Raw EQ status response:", json);
+      if (json.status !== "OK") {
+        throw new WiiMAPIError("COMMAND_FAILED", `EQ status check failed: ${raw}`);
+      }
+      return json.EQStat === "On";
+    } catch {
+      throw new WiiMAPIError("INVALID_RESPONSE", `Cannot parse EQ status from: ${raw}`);
+    }
+  }
+
+  async toggleEQ(): Promise<boolean> {
+    const eqStatus = await this.getEQStatus();
+    await this.setEQEnabled(!eqStatus);
+    return !eqStatus;
+  }
+  */
+
   // --- Device info ---
   async getSystemInfo(): Promise<SystemInfo> {
     const raw = await this.request("getStatusEx");
     try {
       const json = JSON.parse(raw);
       return {
-        model: json.ssid ?? json.project ?? json.DeviceName ?? "WiiM Device",
-        firmwareVersion: json.firmware ?? json.FW_Release_version ?? "Unknown",
-        macAddress: json.MAC ?? "Unknown",
-        serialNumber: json.uuid ?? "Unknown",
+        ssid: json.ssid ?? "",
+        firmware: json.firmware ?? "",
+        macAddress: json.MAC ?? "",
+        internet: json.internet === "1",
+        uuid: json.uuid ?? "",
+        groupName: json.GroupName ?? "",
+        deviceName: json.DeviceName ?? "",
       };
     } catch {
       throw new WiiMAPIError("INVALID_RESPONSE", `Cannot parse system info: ${raw}`);
     }
   }
 
-  async getPlayerStatus(): Promise<DeviceStatus> {
+  async getPlayerStatus(): Promise<PlayerStatus> {
     const raw = await this.request("getPlayerStatus");
     try {
       const json = JSON.parse(raw);
-      let playStatus: DeviceStatus["playStatus"] = "stop";
-      if (json.playStatus === "1" || json.status === "play") playStatus = "play";
-      else if (json.playStatus === "2" || json.status === "pause") playStatus = "pause";
-      else if (json.playStatus === "3" || json.status === "buffering") playStatus = "buffering";
+      console.log("Raw player status response:", json);
       return {
-        playStatus,
-        currentTrack: Number(json.curpos ?? 0),
-        totalTracks: Number(json.totlen ?? 0),
-        currentTime: Number(json.curtime ?? 0),
-        totalTime: Number(json.tottime ?? 0),
-        title: hexDecode(json.Title ?? json.title ?? ""),
-        artist: hexDecode(json.Artist ?? json.artist ?? ""),
-        album: hexDecode(json.Album ?? json.album ?? ""),
-        albumArt: json.pic ?? "",
+        type: mapConstType(DeviceType, json.type, "MASTER"),
+        ch: mapConstType(DeviceChannel, json.ch, "STEREO"),
+        mode: mapConstType(DeviceMode, json.mode, "NONE"),
+        loop: mapConstType(LoopMode, json.loop, "ALL"),
+        eq: Number(json.eq ?? 0),
+        status: json.status ?? "stop",
+        currentPosition: Number(json.curpos ?? 0),
+        offsetPosition: Number(json.offset_pts ?? 0),
+        totalLength: Number(json.totlen ?? 0),
+        alarm: json.alarmflag === "1",
+        playlistLength: Number(json.plicount ?? 0),
+        playlistIndex: Number(json.plicurr ?? 0),
+        mute: json.mute === "1",
+        vol: Number(json.vol ?? 0),
       };
     } catch {
       throw new WiiMAPIError("INVALID_RESPONSE", `Cannot parse player status: ${raw}`);
     }
-  }
-}
-
-/** WiiM encodes track metadata as hex UTF-8 strings. Decodes them safely. */
-function hexDecode(s: string): string {
-  if (!s || s.length === 0 || s.length % 2 !== 0) return s;
-  try {
-    return Buffer.from(s, "hex").toString("utf8");
-  } catch {
-    return s;
   }
 }
