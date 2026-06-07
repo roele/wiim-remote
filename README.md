@@ -26,28 +26,29 @@ If you have multiple WiiM devices on your network, you can select which one to c
 Once installed, simply trigger the Raycast command palette and search for the WiiM Remote commands.
 
 <p align="center">
-  <img src="metadata/wiim-1.png" alt="Raycast Command Palette for WiiM Remote">
+  <img src="metadata/wiim-remote-1.png" alt="Raycast Command Palette for WiiM Remote">
 </p>
 
 ## Controls ✨
 
 ### Playback
 
-* `Play/Pause` - Toggles the playback state of the WiiM device.
-* `Next Track` - Skips to the next track on the WiiM device.
-* `Previous Track` - Skips to the previous track on the WiiM device.
-* `Set Volume` - Sets the volume of the WiiM device to a specified level between `0` and `100`.
-* `Turn Volume Up` - Increases the volume of the WiiM device by a specified step.
-* `Turn Volume Down` - Decreases the volume of the WiiM device by a specified step.
-* `Toggle Mute` - Toggles the mute state of the WiiM device.
+* `Current Track` - Displays the current track information and album art.
+* `Play/Pause` - Toggles the playback state.
+* `Next Track` - Skips to the next track.
+* `Previous Track` - Skips to the previous track.
+* `Set Volume` - Sets the volume to a specified level between `0` and `100`.
+* `Turn Volume Up` - Increases the volume by a specified step.
+* `Turn Volume Down` - Decreases the volume by a specified step.
+* `Toggle Mute` - Toggles the mute state.
 
 ### Settings
 
 * `Select Device` - Lets you select a WiiM device to control.
-* `Select Preset` - Lets you select a preset on the WiiM device.
-* `Switch Input` - Lets you switch the input source on the WiiM device.
-* `Toggle EQ` - Toggles the equalizer on the WiiM device.
-* `Set EQ Preset` - Lets you set the equalizer preset on the WiiM device.
+* `Select Preset` - Lets you select a preset.
+* `Switch Input` - Lets you switch the input source.
+* `Toggle EQ` - Toggles the equalizer.
+* `Set EQ Preset` - Lets you set the equalizer preset.
 
 ## Preferences ⚙️
 
