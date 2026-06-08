@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { resolveDevice } from "./wiim/discovery";
 import { WiiMAPI } from "./wiim/api";
 import { MetaInfo } from "./wiim/types";
+import { showFailureToast } from "@raycast/utils";
+import { WiiMAPIError } from "./wiim/errors";
 
 // Popular encoders and compression libraries cap out at 24-bit.
 function clampBitDepth(value: number, min: number): string {
@@ -24,8 +26,9 @@ export default function Command() {
     resolveDevice()
       .then((device) => new WiiMAPI(device).getMetaInfo())
       .then((metaInfo) => setMetaInfo(metaInfo))
-      .catch(() => {
-        /* keep default */
+      .catch((error) => {
+        const hint = error instanceof WiiMAPIError ? error.getHint() : { title: "Error", message: String(error) };
+        showFailureToast(hint.title, { message: hint.message });
       })
       .finally(() => setIsLoading(false));
   }, []);
