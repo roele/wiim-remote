@@ -116,20 +116,18 @@
     "@raycast/utils": "^2.3.3"
   },
   "devDependencies": {
-    "@jest/globals": "^30.5.2",
     "@raycast/eslint-config": "^2.2.0",
-    "@types/jest": "^30.0.0",
     "@types/node": "^26.6.6",
     "@types/react": "19.3.0",
     "eslint": "^10.14.0",
-    "jest": "^30.5.2",
     "prettier": "^3.9.10",
-    "ts-jest": "^29.4.15",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.5"
   },
   "scripts": {
     "build": "ray build",
-    "test": "jest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "dev": "ray develop",
     "fix-lint": "ray lint --fix",
     "lint": "ray lint",
