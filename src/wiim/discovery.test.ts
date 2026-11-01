@@ -1,5 +1,5 @@
 import * as os from "node:os";
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import * as discovery from "./discovery";
 import * as ssdp from "./ssdp";
 import { WiiMDevice } from "./types";
@@ -53,10 +53,6 @@ describe("Wiim  - Discovery", () => {
     vi.clearAllMocks();
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   describe("getLocalIP", () => {
     test("should return the first non-loopback IPv4 address", () => {
       const mockNetworkInterfaces = {
@@ -74,7 +70,9 @@ describe("Wiim  - Discovery", () => {
         ],
       };
 
-      vi.mocked(os.networkInterfaces).mockReturnValue(mockNetworkInterfaces as Record<string, os.NetworkInterfaceInfo[]>);
+      vi.mocked(os.networkInterfaces).mockReturnValue(
+        mockNetworkInterfaces as Record<string, os.NetworkInterfaceInfo[]>,
+      );
 
       const ip = discovery.getLocalIP();
       expect(ip).toBe("192.168.1.100");
@@ -85,7 +83,9 @@ describe("Wiim  - Discovery", () => {
         lo: [loopbackInterface],
       };
 
-      vi.mocked(os.networkInterfaces).mockReturnValue(mockNetworkInterfaces as Record<string, os.NetworkInterfaceInfo[]>);
+      vi.mocked(os.networkInterfaces).mockReturnValue(
+        mockNetworkInterfaces as Record<string, os.NetworkInterfaceInfo[]>,
+      );
 
       const ip = discovery.getLocalIP();
       expect(ip).toBeUndefined();
@@ -146,7 +146,7 @@ describe("Wiim  - Discovery", () => {
     test("should return selected IP when set and no manual IP", async () => {
       vi.mocked(getManualDeviceIP).mockReturnValue(undefined);
       const mockSelectedIP = "192.168.1.101";
-      vi.mocked(getSelectedDeviceIP).mockReturnValue(mockSelectedIP);
+      vi.mocked(getSelectedDeviceIP).mockResolvedValue(mockSelectedIP);
 
       const result = await discovery.resolveDevice();
       expect(result).toEqual({ ip: mockSelectedIP, port: 443 });
@@ -156,10 +156,10 @@ describe("Wiim  - Discovery", () => {
 
     test("should return cached IP when valid and no manual or selected IP", async () => {
       vi.mocked(getManualDeviceIP).mockReturnValue(undefined);
-      vi.mocked(getSelectedDeviceIP).mockReturnValue(undefined);
-      vi.mocked(isCacheValid).mockReturnValue(true);
+      vi.mocked(getSelectedDeviceIP).mockResolvedValue(undefined);
+      vi.mocked(isCacheValid).mockResolvedValue(true);
       const mockCachedIP = "192.168.1.102";
-      vi.mocked(getCachedDeviceIP).mockReturnValue(mockCachedIP);
+      vi.mocked(getCachedDeviceIP).mockResolvedValue(mockCachedIP);
 
       const result = await discovery.resolveDevice();
       expect(result).toEqual({ ip: mockCachedIP, port: 443 });
@@ -168,11 +168,11 @@ describe("Wiim  - Discovery", () => {
 
     test("should discover device when no manual, selected, or cached IP", async () => {
       vi.mocked(getManualDeviceIP).mockReturnValue(undefined);
-      vi.mocked(getSelectedDeviceIP).mockReturnValue(undefined);
-      vi.mocked(isCacheValid).mockReturnValue(false);
+      vi.mocked(getSelectedDeviceIP).mockResolvedValue(undefined);
+      vi.mocked(isCacheValid).mockResolvedValue(false);
       const mockDiscoveredDevice: WiiMDevice = { ip: "192.168.1.103", port: 443 };
       vi.mocked(ssdp.broadcastDiscover).mockResolvedValueOnce(mockDiscoveredDevice);
-      vi.mocked(setCachedDeviceIP).mockReturnValue(undefined);
+      vi.mocked(setCachedDeviceIP).mockResolvedValue(undefined);
 
       const result = await discovery.resolveDevice();
       expect(result).toEqual(mockDiscoveredDevice);
@@ -181,11 +181,9 @@ describe("Wiim  - Discovery", () => {
 
     test("should throw error when no device found in discovery", async () => {
       vi.mocked(getManualDeviceIP).mockReturnValue(undefined);
-      vi.mocked(getSelectedDeviceIP).mockReturnValue(undefined);
-      vi.mocked(isCacheValid).mockReturnValue(false);
-      vi.mocked(ssdp.broadcastDiscover).mockRejectedValue(
-        new WiiMAPIError("DISCOVERY_FAILED", "No device found"),
-      );
+      vi.mocked(getSelectedDeviceIP).mockResolvedValue(undefined);
+      vi.mocked(isCacheValid).mockResolvedValue(false);
+      vi.mocked(ssdp.broadcastDiscover).mockRejectedValue(new WiiMAPIError("DISCOVERY_FAILED", "No device found"));
 
       await expect(discovery.resolveDevice()).rejects.toThrow(expect.any(WiiMAPIError));
     });
